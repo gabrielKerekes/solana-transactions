@@ -1,0 +1,29 @@
+.App {
+}
+
+.App-header {
+  padding: 100px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+}
+
+.path-input {
+  display: flex;
+  flex-direction: 'row';
+  gap: 20px;
+  align-items: center;
+}
+
+button {
+  width: 180px;
+  height: 40px;
+}
+
+.result {
+  text-align: left;
+  width: 900px;
+  word-wrap: break-word;
+}
