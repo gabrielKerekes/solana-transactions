@@ -1,6 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
 
 export const ALL_MNEMONIC = "all all all all all all all all all all all all";
+export const FILE_OBSCURE_MNEMONIC =
+  "file obscure frog dance chunk panda honey obvious fault match unable always";
 
 export const BLOCKHASH = "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak";
 export const LAST_VALID_BLOCK_HEIGHT = 50;

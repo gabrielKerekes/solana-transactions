@@ -21,6 +21,43 @@ export const computeBudget = () => {
     feePayer: allAllPubKey,
   })
     .add(
+      ComputeBudgetProgram.requestHeapFrame({
+        bytes: 2048,
+      })
+    )
+    .add(
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: 200000,
+      })
+    )
+    .add(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 8000,
+      })
+    )
+    .add(
+      SystemProgram.transfer({
+        fromPubkey: allAllPubKey,
+        toPubkey: fileObscurePubKey,
+        lamports: 20000000,
+      })
+    );
+
+  return tx.serializeMessage().toString("hex");
+};
+
+export const requestHeapFrame = () => {
+  const tx = new Transaction({
+    blockhash: BLOCKHASH,
+    lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
+    feePayer: allAllPubKey,
+  })
+    .add(
+      ComputeBudgetProgram.requestHeapFrame({
+        bytes: 2048,
+      })
+    )
+    .add(
       ComputeBudgetProgram.setComputeUnitLimit({
         units: 200000,
       })

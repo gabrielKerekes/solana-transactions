@@ -15,6 +15,7 @@ import * as TokenProg from "./transactions/tokenProgram";
 import * as Grouped from "./transactions/groupedInstructions";
 import * as Memo from "./transactions/memoProgram";
 import * as ComputeBudget from "./transactions/computeBudgetProgram";
+import * as V0Transactions from "./transactions/v0Transactions";
 import { ALL_MNEMONIC } from "./transactions/constants";
 
 const deriveKeyPair = (mnemonic: string, path: string) => {
@@ -44,7 +45,7 @@ const signV0Tx = (mnemonic: string, path: string, serializedTx: string) => {
   );
   v0tx.sign([keyPair]);
 
-  return v0tx.signatures[0];
+  return Buffer.from(v0tx.signatures[0]).toString("hex");
 };
 
 function App() {
@@ -372,6 +373,15 @@ function App() {
     setResult({ tx, signature });
   };
 
+  /***** V0 TRANSACTIONS *****/
+
+  const signV0 = () => {
+    const tx = V0Transactions.v0Transaction();
+    const signature = signV0Tx(mnemonic, path, tx);
+
+    setResult({ tx, signature });
+  };
+
   return (
     <div className="app-container">
       <div className="path-input">
@@ -452,11 +462,9 @@ function App() {
         </div>
         <div>
           <h1>Associated Token Program</h1>
-          <button onClick={signCreateAssociatedTokenAccount}>
-            Create Associated Token Account
-          </button>
+          <button onClick={signCreateAssociatedTokenAccount}>Create</button>
           <button onClick={signCreateAssociatedTokenAccountIdempotent}>
-            Create Associated Token Account Idempotent
+            Create Idempotent
           </button>
         </div>
         <div>
@@ -475,6 +483,10 @@ function App() {
       <div>
         <h1>Compute Budget</h1>
         <button onClick={signComputeBudget}>Compute Budget</button>
+      </div>
+      <div>
+        <h1>V0 Transactions</h1>
+        <button onClick={signV0}>V0 transaction</button>
       </div>
     </div>
   );
