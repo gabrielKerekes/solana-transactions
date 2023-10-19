@@ -28,6 +28,7 @@ import {
   randomPubKey,
   tokenPubKey,
   fileObscurePubKey,
+  allAllStakePubKey,
 } from "./constants";
 
 export const initializeAccount = () => {
@@ -104,7 +105,28 @@ export const transferChecked = () => {
       tokenPubKey,
       mintPubKey,
       fileObscurePubKey,
-      randomPubKey,
+      allAllPubKey,
+      200,
+      1,
+      undefined,
+      new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb")
+    )
+  );
+
+  return tx.serializeMessage().toString("hex");
+};
+
+export const transferCheckedMultisig = () => {
+  const tx = new Transaction({
+    blockhash: BLOCKHASH,
+    lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
+    feePayer: allAllPubKey,
+  }).add(
+    createTransferCheckedInstruction(
+      tokenPubKey,
+      mintPubKey,
+      fileObscurePubKey,
+      allAllStakePubKey,
       200,
       1,
       [
@@ -130,6 +152,25 @@ export const approveChecked = () => {
       fileObscurePubKey,
       allAllPubKey,
       200,
+      1
+    )
+  );
+
+  return tx.serializeMessage().toString("hex");
+};
+
+export const approveCheckedMultisig = () => {
+  const tx = new Transaction({
+    blockhash: BLOCKHASH,
+    lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
+    feePayer: allAllPubKey,
+  }).add(
+    createApproveCheckedInstruction(
+      tokenPubKey,
+      mintPubKey,
+      fileObscurePubKey,
+      allAllStakePubKey,
+      200,
       1,
       [allAllPubKey, randomPubKey]
     )
@@ -148,6 +189,21 @@ export const revoke = () => {
   return tx.serializeMessage().toString("hex");
 };
 
+export const revokeMultisig = () => {
+  const tx = new Transaction({
+    blockhash: BLOCKHASH,
+    lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
+    feePayer: allAllPubKey,
+  }).add(
+    createRevokeInstruction(tokenPubKey, allAllStakePubKey, [
+      allAllPubKey,
+      randomPubKey,
+    ])
+  );
+
+  return tx.serializeMessage().toString("hex");
+};
+
 export const setAuthority = () => {
   const tx = new Transaction({
     blockhash: BLOCKHASH,
@@ -157,8 +213,25 @@ export const setAuthority = () => {
     createSetAuthorityInstruction(
       tokenPubKey,
       allAllPubKey,
-      AuthorityType.MintTokens,
+      AuthorityType.FreezeAccount,
+      randomPubKey
+    )
+  );
+
+  return tx.serializeMessage().toString("hex");
+};
+
+export const setAuthorityMultisig = () => {
+  const tx = new Transaction({
+    blockhash: BLOCKHASH,
+    lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
+    feePayer: allAllPubKey,
+  }).add(
+    createSetAuthorityInstruction(
+      tokenPubKey,
       allAllPubKey,
+      AuthorityType.FreezeAccount,
+      allAllStakePubKey,
       [allAllPubKey, randomPubKey]
     )
   );
@@ -178,7 +251,25 @@ export const mintToChecked = () => {
       allAllPubKey,
       200,
       2
-      //   [ledgerPubKey, randomPubKey]
+    )
+  );
+
+  return tx.serializeMessage().toString("hex");
+};
+
+export const mintToCheckedMultisig = () => {
+  const tx = new Transaction({
+    blockhash: BLOCKHASH,
+    lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
+    feePayer: allAllPubKey,
+  }).add(
+    createMintToCheckedInstruction(
+      mintPubKey,
+      fileObscurePubKey,
+      allAllStakePubKey,
+      200,
+      2,
+      [allAllPubKey, randomPubKey]
     )
   );
 
@@ -204,7 +295,38 @@ export const burnChecked = () => {
   return tx.serializeMessage().toString("hex");
 };
 
+export const burnCheckedMultisig = () => {
+  const tx = new Transaction({
+    blockhash: BLOCKHASH,
+    lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
+    feePayer: allAllPubKey,
+  }).add(
+    createBurnCheckedInstruction(
+      tokenPubKey,
+      mintPubKey,
+      allAllStakePubKey,
+      200,
+      2,
+      [allAllPubKey, randomPubKey]
+    )
+  );
+
+  return tx.serializeMessage().toString("hex");
+};
+
 export const closeAccount = () => {
+  const tx = new Transaction({
+    blockhash: BLOCKHASH,
+    lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
+    feePayer: allAllPubKey,
+  }).add(
+    createCloseAccountInstruction(tokenPubKey, fileObscurePubKey, allAllPubKey)
+  );
+
+  return tx.serializeMessage().toString("hex");
+};
+
+export const closeAccountMultisig = () => {
   const tx = new Transaction({
     blockhash: BLOCKHASH,
     lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
@@ -213,7 +335,7 @@ export const closeAccount = () => {
     createCloseAccountInstruction(
       tokenPubKey,
       fileObscurePubKey,
-      allAllPubKey,
+      allAllStakePubKey,
       [allAllPubKey, randomPubKey]
     )
   );
@@ -231,13 +353,38 @@ export const freezeAccount = () => {
   return tx.serializeMessage().toString("hex");
 };
 
-export const thawAccount = () => {
+export const freezeAccountMultisig = () => {
   const tx = new Transaction({
     blockhash: BLOCKHASH,
     lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
     feePayer: allAllPubKey,
   }).add(
-    createThawAccountInstruction(tokenPubKey, mintPubKey, allAllPubKey, [
+    createFreezeAccountInstruction(tokenPubKey, mintPubKey, allAllStakePubKey, [
+      allAllPubKey,
+      randomPubKey,
+    ])
+  );
+
+  return tx.serializeMessage().toString("hex");
+};
+
+export const thawAccount = () => {
+  const tx = new Transaction({
+    blockhash: BLOCKHASH,
+    lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
+    feePayer: allAllPubKey,
+  }).add(createThawAccountInstruction(tokenPubKey, mintPubKey, allAllPubKey));
+
+  return tx.serializeMessage().toString("hex");
+};
+
+export const thawAccountMultisig = () => {
+  const tx = new Transaction({
+    blockhash: BLOCKHASH,
+    lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
+    feePayer: allAllPubKey,
+  }).add(
+    createThawAccountInstruction(tokenPubKey, mintPubKey, allAllStakePubKey, [
       allAllPubKey,
       randomPubKey,
     ])

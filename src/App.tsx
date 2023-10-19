@@ -6,6 +6,9 @@ import {
   Message,
   Keypair,
   VersionedMessage,
+  Connection,
+  clusterApiUrl,
+  sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import * as bip39 from "bip39";
 import { HDKey } from "micro-ed25519-hdkey";
@@ -17,6 +20,8 @@ import * as Memo from "./transactions/memoProgram";
 import * as ComputeBudget from "./transactions/computeBudgetProgram";
 import * as V0Transactions from "./transactions/v0Transactions";
 import { ALL_MNEMONIC } from "./transactions/constants";
+import { getMinimumBalanceForRentExemptAccount } from "@solana/spl-token";
+import { doMagic } from "./test";
 
 const deriveKeyPair = (mnemonic: string, path: string) => {
   const seed = bip39.mnemonicToSeedSync(mnemonic);
@@ -25,12 +30,21 @@ const deriveKeyPair = (mnemonic: string, path: string) => {
   return Keypair.fromSeed(hd.derive(path).privateKey);
 };
 
-const signLegacyTx = (mnemonic: string, path: string, serializedTx: string) => {
+const signLegacyTx = async (
+  mnemonic: string,
+  path: string,
+  serializedTx: string
+) => {
   const keyPair = deriveKeyPair(mnemonic, path);
 
   const tx = Transaction.populate(
     Message.from(Buffer.from(serializedTx, "hex"))
   );
+
+  const fee = await estimateFee(tx);
+  console.log({ fee });
+
+  // await submitTx(mnemonic, path, tx);
 
   tx.sign(keyPair);
 
@@ -46,6 +60,46 @@ const signV0Tx = (mnemonic: string, path: string, serializedTx: string) => {
   v0tx.sign([keyPair]);
 
   return Buffer.from(v0tx.signatures[0]).toString("hex");
+};
+
+const estimateFee = async (transaction: Transaction) => {
+  const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+  const recentBlockhash = await connection.getLatestBlockhash();
+
+  const txBlockhash = transaction.recentBlockhash;
+  transaction.recentBlockhash = recentBlockhash.blockhash;
+
+  const fee = await transaction.getEstimatedFee(connection);
+  const min = await getMinimumBalanceForRentExemptAccount(connection);
+  console.log({ min });
+
+  transaction.recentBlockhash = txBlockhash;
+
+  return fee;
+};
+
+const submitTx = async (
+  mnemonic: string,
+  path: string,
+  transaction: Transaction
+) => {
+  const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+  const recentBlockhash = await connection.getLatestBlockhash();
+
+  const txBlockhash = transaction.recentBlockhash;
+  transaction.recentBlockhash = recentBlockhash.blockhash;
+
+  const keyPair = deriveKeyPair(mnemonic, path);
+  const signature = await sendAndConfirmTransaction(connection, transaction, [
+    keyPair,
+  ]);
+  console.log({ signature });
+
+  transaction.recentBlockhash = txBlockhash;
+
+  return transaction;
 };
 
 function App() {
@@ -67,315 +121,315 @@ function App() {
 
   /***** SYSTEM PROGRAM *****/
 
-  const signCreateAccount = () => {
+  const signCreateAccount = async () => {
     const tx = SystemProg.createAccount();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signAssign = () => {
+  const signAssign = async () => {
     const tx = SystemProg.assign();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signTransfer = () => {
+  const signTransfer = async () => {
     const tx = SystemProg.transfer();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signCreateAccountWithSeed = () => {
+  const signCreateAccountWithSeed = async () => {
     const tx = SystemProg.createAccountWithSeed();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signAdvanceNonceAccount = () => {
+  const signAdvanceNonceAccount = async () => {
     const tx = SystemProg.advanceNonceAccount();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signWithdrawNonceAccount = () => {
+  const signWithdrawNonceAccount = async () => {
     const tx = SystemProg.withdrawNonceAccount();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signInitializeNonceAccount = () => {
+  const signInitializeNonceAccount = async () => {
     const tx = SystemProg.initializeNonceAccount();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signAuthorizeNonceAccount = () => {
+  const signAuthorizeNonceAccount = async () => {
     const tx = SystemProg.authorizeNonceAccount();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signAllocate = () => {
+  const signAllocate = async () => {
     const tx = SystemProg.allocate();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signAllocateWithSeed = () => {
+  const signAllocateWithSeed = async () => {
     const tx = SystemProg.allocateWithSeed();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signAssignWithSeed = () => {
+  const signAssignWithSeed = async () => {
     const tx = SystemProg.assignWithSeed();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signTransferWithSeed = () => {
+  const signTransferWithSeed = async () => {
     const tx = SystemProg.transferWithSeed();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
   /***** STAKE PROGRAM *****/
 
-  const signInitializeAccount = () => {
+  const signInitializeAccount = async () => {
     const tx = StakeProg.initializeAccount();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signAuthorize = () => {
+  const signAuthorize = async () => {
     const tx = StakeProg.authorize();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signDelegate = () => {
+  const signDelegate = async () => {
     const tx = StakeProg.delegate();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signSplit = () => {
+  const signSplit = async () => {
     const tx = StakeProg.split();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signWithdraw = () => {
+  const signWithdraw = async () => {
     const tx = StakeProg.withdraw();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signDeactivate = () => {
+  const signDeactivate = async () => {
     const tx = StakeProg.deactivate();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signMerge = () => {
+  const signMerge = async () => {
     const tx = StakeProg.merge();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signAuthorizeWithSeed = () => {
+  const signAuthorizeWithSeed = async () => {
     const tx = StakeProg.authorizeWithSeed();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
   /***** TOKEN PROGRAM *****/
 
-  const signInitializeTokenAccount = () => {
+  const signInitializeTokenAccount = async () => {
     const tx = TokenProg.initializeAccount();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signInitializeTokenAccount2 = () => {
+  const signInitializeTokenAccount2 = async () => {
     const tx = TokenProg.initializeAccount2();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signInitializeTokenAccount3 = () => {
+  const signInitializeTokenAccount3 = async () => {
     const tx = TokenProg.initializeAccount3();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signInitializeMultisig = () => {
+  const signInitializeMultisig = async () => {
     const tx = TokenProg.initializeMultisig();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signInitializeImmutableOwner = () => {
+  const signInitializeImmutableOwner = async () => {
     const tx = TokenProg.initializeImmutableOwner();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signTransferChecked = () => {
+  const signTransferChecked = async () => {
     const tx = TokenProg.transferChecked();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signApproveChecked = () => {
+  const signApproveChecked = async () => {
     const tx = TokenProg.approveChecked();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signRevoke = () => {
+  const signRevoke = async () => {
     const tx = TokenProg.revoke();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signSetAuthority = () => {
+  const signSetAuthority = async () => {
     const tx = TokenProg.setAuthority();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signMintToChecked = () => {
+  const signMintToChecked = async () => {
     const tx = TokenProg.mintToChecked();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signBurnChecked = () => {
+  const signBurnChecked = async () => {
     const tx = TokenProg.burnChecked();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signCloseAccount = () => {
+  const signCloseAccount = async () => {
     const tx = TokenProg.closeAccount();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signFreezeAccount = () => {
+  const signFreezeAccount = async () => {
     const tx = TokenProg.freezeAccount();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signThawAccount = () => {
+  const signThawAccount = async () => {
     const tx = TokenProg.thawAccount();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signSyncNative = () => {
+  const signSyncNative = async () => {
     const tx = TokenProg.syncNative();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
   /***** ASSOCIATED TOKEN PROGRAM *****/
 
-  const signCreateAssociatedTokenAccount = () => {
+  const signCreateAssociatedTokenAccount = async () => {
     const tx = TokenProg.createAssociatedTokenAccount();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signCreateAssociatedTokenAccountIdempotent = () => {
+  const signCreateAssociatedTokenAccountIdempotent = async () => {
     const tx = TokenProg.createAssociatedTokenAccountIdempotent();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
   /***** MEMO PROGRAM *****/
 
-  const signLegacyMemo = () => {
+  const signLegacyMemo = async () => {
     const tx = Memo.legacyMemo();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signMemo = () => {
+  const signMemo = async () => {
     const tx = Memo.memo();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
   /***** COMPUTE BUDGET *****/
 
-  const signComputeBudget = () => {
+  const signComputeBudget = async () => {
     const tx = ComputeBudget.computeBudget();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
   /***** GROUPED INSTRUCTIONS *****/
 
-  const signCreateStakeAccount = () => {
+  const signCreateStakeAccount = async () => {
     const tx = Grouped.createStakeAccount();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
-  const signCreateStakeAccountAndDelegate = () => {
+  const signCreateStakeAccountAndDelegate = async () => {
     const tx = Grouped.createStakeAccountAndDelegate();
-    const signature = signLegacyTx(mnemonic, path, tx);
+    const signature = await signLegacyTx(mnemonic, path, tx);
 
     setResult({ tx, signature });
   };
 
   /***** V0 TRANSACTIONS *****/
 
-  const signV0 = () => {
+  const signV0 = async () => {
     const tx = V0Transactions.v0Transaction();
     const signature = signV0Tx(mnemonic, path, tx);
 
@@ -487,6 +541,10 @@ function App() {
       <div>
         <h1>V0 Transactions</h1>
         <button onClick={signV0}>V0 transaction</button>
+      </div>
+      <div>
+        <h1>Do magic!!</h1>
+        <button onClick={() => doMagic()}>Do magic</button>
       </div>
     </div>
   );

@@ -42,7 +42,7 @@ export const authorize = () => {
       stakePubkey: allAllStakePubKey,
       authorizedPubkey: allAllPubKey,
       newAuthorizedPubkey: fileObscurePubKey,
-      stakeAuthorizationType: { index: 1 },
+      stakeAuthorizationType: { index: 0 },
     })
   );
 

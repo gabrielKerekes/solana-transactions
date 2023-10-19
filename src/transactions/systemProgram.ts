@@ -20,7 +20,7 @@ export const createAccount = () => {
       fromPubkey: allAllPubKey,
       newAccountPubkey: randomPubKey,
       lamports: 20000000,
-      space: 1000,
+      space: 10210220,
       programId: systemProgramPubKey,
     })
   );
@@ -169,7 +169,7 @@ export const allocateWithSeed = () => {
       accountPubkey: seedPubKey,
       basePubkey: allAllPubKey,
       seed: "seed:0",
-      space: 200,
+      space: 22200,
       programId: systemProgramPubKey,
     })
   );

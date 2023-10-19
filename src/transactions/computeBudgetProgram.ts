@@ -21,18 +21,13 @@ export const computeBudget = () => {
     feePayer: allAllPubKey,
   })
     .add(
-      ComputeBudgetProgram.requestHeapFrame({
-        bytes: 2048,
-      })
-    )
-    .add(
       ComputeBudgetProgram.setComputeUnitLimit({
-        units: 200000,
+        units: 2000200,
       })
     )
     .add(
       ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: 8000,
+        microLamports: 80200,
       })
     )
     .add(
